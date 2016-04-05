@@ -1,6 +1,7 @@
 /// <reference path="phaser/phaser.d.ts"/>
 /// <reference path="joypad/GamePad.ts"/>
 
+
 class mainState extends Phaser.State {
     private player:Phaser.Sprite;
     private cursors:Phaser.CursorKeys;
@@ -75,7 +76,7 @@ class mainState extends Phaser.State {
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
-        this.createMonsters();
+        prueba.createMonsters();
         this.createTexts();
 
         if (!this.game.device.desktop) {
@@ -134,7 +135,7 @@ class mainState extends Phaser.State {
         this.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
 
     };
-
+/*
     private createMonsters() {
         this.monsters = this.add.group();
         this.monsters.enableBody = true;
@@ -155,7 +156,7 @@ class mainState extends Phaser.State {
         this.monsters.setAll('checkWorldBounds', true);
         this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
     };
-
+*/
     private setRandomAngle(monster:Phaser.Sprite) {
         monster.angle = this.rnd.angle();
     }
@@ -402,6 +403,8 @@ class ShooterGame extends Phaser.Game {
         this.state.start('main');
     }
 }
+
+
 
 window.onload = () => {
     var game = new ShooterGame();
