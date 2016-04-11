@@ -3,38 +3,13 @@
 
 
 class mainState extends Phaser.State {
-    private player:Phaser.Sprite;
-    private cursors:Phaser.CursorKeys;
-    private bullets:Phaser.Group;
-    private tilemap:Phaser.Tilemap;
-    private background:Phaser.TilemapLayer;
-    private walls:Phaser.TilemapLayer;
-    private monsters:Phaser.Group;
-    private explosions:Phaser.Group;
-    private scoreText:Phaser.Text;
-    private livesText:Phaser.Text;
-    private stateText:Phaser.Text;
-    private gamepad:Gamepads.GamePad;
 
-
-    private PLAYER_ACCELERATION = 500;
-    private PLAYER_MAX_SPEED = 400; // pixels/second
-    private PLAYER_DRAG = 600;
-    private MONSTER_SPEED = 100;
-    private BULLET_SPEED = 800;
-    private MONSTER_HEALTH = 3;
-    private FIRE_RATE = 200;
-    private LIVES = 3;
-    private TEXT_MARGIN = 50;
-
-    private nextFire = 0;
-    private score = 0;
-
+    game:ShooterGame;
 
     preload():void {
         super.preload();
 
-        this.load.image('bg', 'assets/bg.png');
+
         this.load.image('player', 'assets/survivor1_machine.png');
         this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
         this.load.image('zombie1', 'assets/zoimbie1_hold.png');
@@ -54,7 +29,7 @@ class mainState extends Phaser.State {
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
         if (this.game.device.desktop) {
-            this.cursors = this.input.keyboard.createCursorKeys();
+            this.game.cursors = this.input.keyboard.createCursorKeys();
         } else {
             this.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
             this.scale.pageAlignHorizontally = true;
@@ -76,7 +51,7 @@ class mainState extends Phaser.State {
         this.createBullets();
         this.createPlayer();
         this.setupCamera();
-        prueba.createMonsters();
+        this.createMonsters();
         this.createTexts();
 
         if (!this.game.device.desktop) {
@@ -88,75 +63,99 @@ class mainState extends Phaser.State {
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
 
-        this.scoreText = this.add.text(this.TEXT_MARGIN, this.TEXT_MARGIN, 'Score: ' + this.score,
-            {font: "30px Arial", fill: "#ffffff"});
-        this.scoreText.fixedToCamera = true;
-        this.livesText = this.add.text(width - this.TEXT_MARGIN, this.TEXT_MARGIN, 'Lives: ' + this.player.health,
-            {font: "30px Arial", fill: "#ffffff"});
-        this.livesText.anchor.setTo(1, 0);
-        this.livesText.fixedToCamera = true;
+        this.game.scoreText = this.add.text(this.game.TEXT_MARGIN
+            , this.game.TEXT_MARGIN
+            , 'Score: ' + this.game.score
+            , {font: "30px Arial", fill: "#ffffff"}
+        );
 
-        this.stateText = this.add.text(width / 2, height / 2, '', {font: '84px Arial', fill: '#fff'});
-        this.stateText.anchor.setTo(0.5, 0.5);
-        this.stateText.visible = false;
-        this.stateText.fixedToCamera = true;
+        this.game.scoreText.fixedToCamera = true;
+        this.game.livesText = this.add.text(width - this.game.TEXT_MARGIN
+            , this.game.TEXT_MARGIN
+            , 'Lives: ' + this.game.player.health
+            , {font: "30px Arial", fill: "#ffffff"}
+        );
+
+        this.game.livesText.anchor.setTo(1, 0);
+        this.game.livesText.fixedToCamera = true;
+
+        this.game.stateText = this.add.text(width / 2
+            , height / 2
+            , ''
+            , {font: '84px Arial', fill: '#fff'}
+        );
+
+        this.game.stateText.anchor.setTo(0.5, 0.5);
+        this.game.stateText.visible = false;
+        this.game.stateText.fixedToCamera = true;
     };
 
     private createExplosions() {
-        this.explosions = this.add.group();
-        this.explosions.createMultiple(20, 'explosion');
+        this.game.explosions = this.add.group();
+        this.game.explosions.createMultiple(20, 'explosion');
 
-        this.explosions.setAll('anchor.x', 0.5);
-        this.explosions.setAll('anchor.y', 0.5);
+        this.game.explosions.setAll('anchor.x', 0.5);
+        this.game.explosions.setAll('anchor.y', 0.5);
 
-        this.explosions.forEach((explosion:Phaser.Sprite) => {
-            explosion.loadTexture(this.rnd.pick(['explosion', 'explosion2', 'explosion3']));
+        this.game.explosions.forEach((explosion:Phaser.Sprite) => {
+            explosion.loadTexture(this.rnd.pick(['explosion'
+                , 'explosion2'
+                , 'explosion3'
+            ]));
         }, this);
     };
 
     private createWalls() {
-        this.walls = this.tilemap.createLayer('walls');
-        this.walls.x = this.world.centerX;
-        this.walls.y = this.world.centerY;
+        this.game.walls = this.game.tilemap.createLayer('walls');
+        this.game.walls.x = this.world.centerX;
+        this.game.walls.y = this.world.centerY;
 
-        this.walls.resizeWorld();
+        this.game.walls.resizeWorld();
 
-        this.tilemap.setCollisionBetween(1, 195, true, 'walls');
+        this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
 
     private createBackground() {
-        this.background = this.tilemap.createLayer('background');
-        this.background.x = this.world.centerX;
-        this.background.y = this.world.centerY;
+        this.game.background = this.game.tilemap.createLayer('background');
+        this.game.background.x = this.world.centerX;
+        this.game.background.y = this.world.centerY;
     };
 
     private createTilemap() {
-        this.tilemap = this.game.add.tilemap('tilemap');
-        this.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
+        this.game.tilemap = this.game.add.tilemap('tilemap');
+        this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
 
     };
-/*
+
     private createMonsters() {
-        this.monsters = this.add.group();
-        this.monsters.enableBody = true;
-        this.monsters.physicsBodyType = Phaser.Physics.ARCADE;
+        this.game.monsters = this.add.group();
+        this.game.monsters.enableBody = true;
+        this.game.monsters.physicsBodyType = Phaser.Physics.ARCADE;
 
-        this.tilemap.createFromObjects('monsters', 541, 'zombie1', 0, true, false, this.monsters);
+        this.game.tilemap.createFromObjects('monsters'
+            , 541
+            , 'zombie1'
+            , 0, true, false, this.game.monsters);
 
-        this.monsters.setAll('anchor.x', 0.5);
-        this.monsters.setAll('anchor.y', 0.5);
+        this.game.monsters.setAll('anchor.x', 0.5);
+        this.game.monsters.setAll('anchor.y', 0.5);
         //this.monsters.setAll('scale.x', 2);
         //this.monsters.setAll('scale.y', 2);
-        this.monsters.setAll('health', this.MONSTER_HEALTH);
-        this.monsters.forEach(this.setRandomAngle, this);
-        this.monsters.forEach((explosion:Phaser.Sprite) => {
-            explosion.loadTexture(this.rnd.pick(['zombie1', 'zombie2', 'robot']));
+        this.game.monsters.setAll('health', this.game.MONSTER_HEALTH);
+        this.game.monsters.forEach(this.setRandomAngle, this);
+        this.game.monsters.forEach((explosion:Phaser.Sprite) => {
+            explosion.loadTexture(this.rnd.pick(['zombie1'
+                , 'zombie2'
+                , 'robot'])
+            );
         }, this);
 
-        this.monsters.setAll('checkWorldBounds', true);
-        this.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
+        this.game.monsters.setAll('checkWorldBounds', true);
+        this.game.monsters.callAll('events.onOutOfBounds.add'
+            , 'events.onOutOfBounds'
+            , this.resetMonster, this);
     };
-*/
+
     private setRandomAngle(monster:Phaser.Sprite) {
         monster.angle = this.rnd.angle();
     }
@@ -164,70 +163,74 @@ class mainState extends Phaser.State {
     private resetMonster(monster:Phaser.Sprite) {
         monster.rotation = this.physics.arcade.angleBetween(
             monster,
-            this.player
+            this.game.player
         );
     }
 
     private createBullets() {
-        this.bullets = this.add.group();
-        this.bullets.enableBody = true;
-        this.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-        this.bullets.createMultiple(20, 'bullet');
+        this.game.bullets = this.add.group();
+        this.game.bullets.enableBody = true;
+        this.game.bullets.physicsBodyType = Phaser.Physics.ARCADE;
+        this.game.bullets.createMultiple(20, 'bullet');
 
-        this.bullets.setAll('anchor.x', 0.5);
-        this.bullets.setAll('anchor.y', 0.5);
-        this.bullets.setAll('scale.x', 0.5);
-        this.bullets.setAll('scale.y', 0.5);
-        this.bullets.setAll('outOfBoundsKill', true);
-        this.bullets.setAll('checkWorldBounds', true);
+        this.game.bullets.setAll('anchor.x', 0.5);
+        this.game.bullets.setAll('anchor.y', 0.5);
+        this.game.bullets.setAll('scale.x', 0.5);
+        this.game.bullets.setAll('scale.y', 0.5);
+        this.game.bullets.setAll('outOfBoundsKill', true);
+        this.game.bullets.setAll('checkWorldBounds', true);
     };
 
     private createVirtualJoystick() {
-        this.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
+        this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
     };
 
     private setupCamera() {
-        this.camera.follow(this.player);
+        this.camera.follow(this.game.player);
     };
 
     private createPlayer() {
-        this.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
-        this.player.anchor.setTo(0.5, 0.5);
+        this.game.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
+        this.game.player.anchor.setTo(0.5, 0.5);
         //this.player.scale.setTo(2, 2);
-        this.player.health = this.LIVES;
-        this.physics.enable(this.player, Phaser.Physics.ARCADE);
+        this.game.player.health = this.game.LIVES;
+        this.physics.enable(this.game.player, Phaser.Physics.ARCADE);
 
-        this.player.body.maxVelocity.setTo(this.PLAYER_MAX_SPEED, this.PLAYER_MAX_SPEED); // x, y
-        this.player.body.collideWorldBounds = true;
-        this.player.body.drag.setTo(this.PLAYER_DRAG, this.PLAYER_DRAG); // x, y
+        this.game.player.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED
+            , this.game.PLAYER_MAX_SPEED); // x, y
+        this.game.player.body.collideWorldBounds = true;
+        this.game.player.body.drag.setTo(this.game.PLAYER_DRAG
+            , this.game.PLAYER_DRAG); // x, y
     };
 
     update():void {
         super.update();
         this.movePlayer();
         this.moveMonsters();
+
         if (this.game.device.desktop) {
             this.rotatePlayerToPointer();
             this.fireWhenButtonClicked();
         } else {
+
             this.rotateWithRightStick();
             this.fireWithRightStick();
         }
 
-        this.physics.arcade.collide(this.player, this.monsters, this.monsterTouchesPlayer, null, this);
-        this.physics.arcade.collide(this.player, this.walls);
-        this.physics.arcade.overlap(this.bullets, this.monsters, this.bulletHitMonster, null, this);
-        this.physics.arcade.collide(this.bullets, this.walls, this.bulletHitWall, null, this);
-        this.physics.arcade.collide(this.walls, this.monsters, this.resetMonster, null, this);
-        this.physics.arcade.collide(this.monsters, this.monsters, this.resetMonster, null, this);
+        this.physics.arcade.collide(this.game.player, this.game.monsters, this.monsterTouchesPlayer, null, this);
+        this.physics.arcade.collide(this.game.player, this.game.walls);
+        this.physics.arcade.overlap(this.game.bullets, this.game.monsters, this.bulletHitMonster, null, this);
+        this.physics.arcade.collide(this.game.bullets, this.game.walls, this.bulletHitWall, null, this);
+        this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
+        this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
     }
 
     rotateWithRightStick() {
-        var speed = this.gamepad.stick2.speed;
+        var speed = this.game.gamepad.stick2.speed;
 
         if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
-            var rotatePos = new Phaser.Point(this.player.x + speed.x, this.player.y + speed.y);
-            this.player.rotation = this.physics.arcade.angleToXY(this.player, rotatePos.x, rotatePos.y);
+            var rotatePos = new Phaser.Point(this.game.player.x + speed.x, this.game.player.y + speed.y);
+            this.game.player.rotation = this.physics.arcade.angleToXY(this.game.player, rotatePos.x, rotatePos.y);
 
             this.fire();
         }
@@ -242,13 +245,13 @@ class mainState extends Phaser.State {
 
         player.damage(1);
 
-        this.livesText.setText("Lives: " + this.player.health);
+        this.game.livesText.setText("Lives: " + this.game.player.health);
 
         this.blink(player);
 
         if (player.health == 0) {
-            this.stateText.text = " GAME OVER \n Click to restart";
-            this.stateText.visible = true;
+            this.game.stateText.text = " GAME OVER \n Click to restart";
+            this.game.stateText.visible = true;
 
             //the "click to restart" handler
             this.input.onTap.addOnce(this.restart, this);
@@ -274,8 +277,8 @@ class mainState extends Phaser.State {
         if (monster.health > 0) {
             this.blink(monster)
         } else {
-            this.score += 10;
-            this.scoreText.setText("Score: " + this.score);
+            this.game.score += 10;
+            this.game.scoreText.setText("Score: " + this.game.score);
         }
     }
 
@@ -289,11 +292,11 @@ class mainState extends Phaser.State {
     }
 
     private moveMonsters() {
-        this.monsters.forEach(this.advanceStraightAhead, this)
+        this.game.monsters.forEach(this.advanceStraightAhead, this)
     };
 
     private advanceStraightAhead(monster:Phaser.Sprite) {
-        this.physics.arcade.velocityFromAngle(monster.angle, this.MONSTER_SPEED, monster.body.velocity);
+        this.physics.arcade.velocityFromAngle(monster.angle, this.game.MONSTER_SPEED, monster.body.velocity);
     }
 
     private fireWhenButtonClicked() {
@@ -303,8 +306,8 @@ class mainState extends Phaser.State {
     };
 
     private rotatePlayerToPointer() {
-        this.player.rotation = this.physics.arcade.angleToPointer(
-            this.player,
+        this.game.player.rotation = this.physics.arcade.angleToPointer(
+            this.game.player,
             this.input.activePointer
         );
     };
@@ -352,30 +355,30 @@ class mainState extends Phaser.State {
     };
 
     fire():void {
-        if (this.time.now > this.nextFire) {
-            var bullet = this.bullets.getFirstDead();
+        if (this.time.now > this.game.nextFire) {
+            var bullet = this.game.bullets.getFirstDead();
             if (bullet) {
-                var length = this.player.width * 0.5 + 20;
-                var x = this.player.x + (Math.cos(this.player.rotation) * length);
-                var y = this.player.y + (Math.sin(this.player.rotation) * length);
+                var length = this.game.player.width * 0.5 + 20;
+                var x = this.game.player.x + (Math.cos(this.game.player.rotation) * length);
+                var y = this.game.player.y + (Math.sin(this.game.player.rotation) * length);
 
                 bullet.reset(x, y);
 
                 this.explosion(x, y);
 
-                bullet.angle = this.player.angle;
+                bullet.angle = this.game.player.angle;
 
-                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.BULLET_SPEED);
+                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.game.BULLET_SPEED);
 
                 bullet.body.velocity.setTo(velocity.x, velocity.y);
 
-                this.nextFire = this.time.now + this.FIRE_RATE;
+                this.game.nextFire = this.time.now + this.game.FIRE_RATE;
             }
         }
     }
 
     explosion(x:number, y:number):void {
-        var explosion:Phaser.Sprite = this.explosions.getFirstDead();
+        var explosion:Phaser.Sprite = this.game.explosions.getFirstDead();
         if (explosion) {
             explosion.reset(
                 x - this.rnd.integerInRange(0, 5) + this.rnd.integerInRange(0, 5),
@@ -396,7 +399,36 @@ class mainState extends Phaser.State {
     }
 }
 
+
+
 class ShooterGame extends Phaser.Game {
+
+    player:Phaser.Sprite;
+    cursors:Phaser.CursorKeys;
+    bullets:Phaser.Group;
+    tilemap:Phaser.Tilemap;
+    background:Phaser.TilemapLayer;
+    walls:Phaser.TilemapLayer;
+    monsters:Phaser.Group;
+    explosions:Phaser.Group;
+    scoreText:Phaser.Text;
+    livesText:Phaser.Text;
+    stateText:Phaser.Text;
+    gamepad:Gamepads.GamePad;
+
+    PLAYER_ACCELERATION = 500;
+    PLAYER_MAX_SPEED = 400; // pixels/second
+    PLAYER_DRAG = 600;
+    MONSTER_SPEED = 100;
+    BULLET_SPEED = 800;
+    MONSTER_HEALTH = 3;
+    FIRE_RATE = 200;
+    LIVES = 3;
+    TEXT_MARGIN = 50;
+
+    nextFire = 0;
+    score = 0;
+
     constructor() {
         super(800, 480, Phaser.CANVAS, 'gameDiv');
         this.state.add('main', mainState);
@@ -404,8 +436,29 @@ class ShooterGame extends Phaser.Game {
     }
 }
 
+window.onload = () => { new ShooterGame(); };
 
+//---------------------------------------STRATEGY--------------------------------------------------//
+//----------------------strategy para decidir tipo de muerte de zombie-----------------------------//
 
-window.onload = () => {
-    var game = new ShooterGame();
-};
+class Monster {
+    constructor(){
+
+    }
+}
+
+class Zombie extends Monster {
+
+}
+
+interface ghostable {
+
+}
+
+interface disappearable {
+
+}
+
+class Monster {
+
+}
