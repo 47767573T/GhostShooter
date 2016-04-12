@@ -1060,8 +1060,6 @@ var mainState = (function (_super) {
         this.game.tilemap.createFromObjects('monsters', 541, 'zombie1', 0, true, false, this.game.monsters);
         this.game.monsters.setAll('anchor.x', 0.5);
         this.game.monsters.setAll('anchor.y', 0.5);
-        //this.monsters.setAll('scale.x', 2);
-        //this.monsters.setAll('scale.y', 2);
         this.game.monsters.setAll('health', this.game.MONSTER_HEALTH);
         this.game.monsters.forEach(this.setRandomAngle, this);
         this.game.monsters.forEach(function (explosion) {
@@ -1143,6 +1141,7 @@ var mainState = (function (_super) {
     };
     mainState.prototype.monsterTouchesPlayer = function (player, monster) {
         monster.kill();
+        monster = new ArmaduraDebil(monster);
         player.damage(1);
         this.game.livesText.setText("Lives: " + this.game.player.health);
         this.blink(player);
@@ -1299,23 +1298,49 @@ var ShooterGame = (function (_super) {
     return ShooterGame;
 })(Phaser.Game);
 window.onload = function () { new ShooterGame(); };
-//---------------------------------------STRATEGY--------------------------------------------------//
-//----------------------strategy para decidir tipo de muerte de zombie-----------------------------//
-var Monster = (function () {
-    function Monster() {
+var ZombieA = (function () {
+    function ZombieA() {
+        this.life = 1;
     }
-    return Monster;
+    ZombieA.prototype.ZombieA = function () { };
+    ZombieA.prototype.Armar = function () { return 1; };
+    return ZombieA;
 })();
-var Zombie = (function (_super) {
-    __extends(Zombie, _super);
-    function Zombie() {
-        _super.apply(this, arguments);
+var ZombieB = (function () {
+    function ZombieB() {
     }
-    return Zombie;
-})(Monster);
-var Monster = (function () {
-    function Monster() {
-    }
-    return Monster;
+    ZombieB.prototype.ZombieB = function () { };
+    ZombieB.prototype.Armar = function () { return 1; };
+    return ZombieB;
 })();
+var Robot = (function () {
+    function Robot() {
+    }
+    Robot.prototype.Robot = function () { };
+    Robot.prototype.hp = function () { return 2; };
+    return Robot;
+})();
+//---------------------------------------DECORATOR--------------------------------------------------------------------//
+//------------decorator para representar aumento de vida o armadura dinamicamente-------------------------------------//
+// clase decorator que ñade resistencia
+var Armadura = (function () {
+    function Armadura() {
+    }
+    return Armadura;
+})();
+var ArmaduraDebil = (function () {
+    function ArmaduraDebil(monster) {
+        this.monster = monster;
+    }
+    ArmaduraDebil.prototype.hp = function () { return this.monster.hp() + 1; };
+    return ArmaduraDebil;
+})();
+var ArmaduraFuerte = (function () {
+    function ArmaduraFuerte(monster) {
+        this.monster = monster;
+    }
+    ArmaduraFuerte.prototype.hp = function () { return this.monster.hp() + 2; };
+    return ArmaduraFuerte;
+})();
+//https://github.com/torokmark/design_patterns_in_typescript 
 //# sourceMappingURL=main.js.map

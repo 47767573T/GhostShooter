@@ -139,8 +139,6 @@ class mainState extends Phaser.State {
 
         this.game.monsters.setAll('anchor.x', 0.5);
         this.game.monsters.setAll('anchor.y', 0.5);
-        //this.monsters.setAll('scale.x', 2);
-        //this.monsters.setAll('scale.y', 2);
         this.game.monsters.setAll('health', this.game.MONSTER_HEALTH);
         this.game.monsters.forEach(this.setRandomAngle, this);
         this.game.monsters.forEach((explosion:Phaser.Sprite) => {
@@ -242,6 +240,8 @@ class mainState extends Phaser.State {
 
     private monsterTouchesPlayer(player:Phaser.Sprite, monster:Phaser.Sprite) {
         monster.kill();
+
+        monster = new ArmaduraDebil(monster);
 
         player.damage(1);
 
@@ -438,27 +438,52 @@ class ShooterGame extends Phaser.Game {
 
 window.onload = () => { new ShooterGame(); };
 
-//---------------------------------------STRATEGY--------------------------------------------------//
-//----------------------strategy para decidir tipo de muerte de zombie-----------------------------//
 
-class Monster {
-    constructor(){
+interface Monster {
+    life;
 
-    }
+    Armar(): void;
 }
 
-class Zombie extends Monster {
+class ZombieA implements Monster {
+    life = 1;
 
+    ZombieA(){  }
+    Armar(){ return 1; }
 }
 
-interface ghostable {
+class ZombieB implements Monster{
 
+    ZombieB(){  }
+    Armar(){ return 1; }
 }
 
-interface disappearable {
+class Robot implements Monster{
 
+    Robot() { }
+    hp() { return 2; }
 }
 
-class Monster {
+//---------------------------------------DECORATOR--------------------------------------------------------------------//
+//------------decorator para representar aumento de vida o armadura dinamicamente-------------------------------------//
 
+// clase decorator que ñade resistencia
+abstract class Armadura { }
+
+class ArmaduraDebil implements Armadura {
+    monster:Monster;
+
+    public hp(): int { return this.monster.hp() + 1}
+
+    constructor( monster:Monster ) { this.monster = monster }
 }
+
+class ArmaduraFuerte implements Armadura {
+    monster:Monster;
+    hp () { return this.monster.hp() + 2}
+
+    constructor( monster:Monster ) { this.monster = monster }
+}
+
+
+//https://github.com/torokmark/design_patterns_in_typescript
