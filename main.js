@@ -1101,8 +1101,12 @@ var mainState = (function (_super) {
     mainState.prototype.createPlayer = function () {
         this.game.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.game.player.anchor.setTo(0.5, 0.5);
-        //this.player.scale.setTo(2, 2);
-        this.game.player.health = this.game.LIVES;
+        //pieza de la armadura (DECORATOR)----------------------------------------------------------------------------//
+        var guantelete = new Guantelete("brazal dragon");
+        var material = new Oro("guantelete de oro", guantelete);
+        //---------------------------------------------------------------------------------fin funcion DECORATOR------//
+        this.game.player.health = this.game.LIVES + material.endurecer();
+        console.log(this.game.player.health + "COMPROBADO DECORATOR FUNCIONA");
         this.physics.enable(this.game.player, Phaser.Physics.ARCADE);
         this.game.player.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED); // x, y
         this.game.player.body.collideWorldBounds = true;
@@ -1141,7 +1145,6 @@ var mainState = (function (_super) {
     };
     mainState.prototype.monsterTouchesPlayer = function (player, monster) {
         monster.kill();
-        monster = new ArmaduraDebil(monster);
         player.damage(1);
         this.game.livesText.setText("Lives: " + this.game.player.health);
         this.blink(player);
@@ -1298,49 +1301,57 @@ var ShooterGame = (function (_super) {
     return ShooterGame;
 })(Phaser.Game);
 window.onload = function () { new ShooterGame(); };
-var ZombieA = (function () {
-    function ZombieA() {
-        this.life = 1;
+//Decorator: Componente concreto (ej: cafe)
+var Guantelete = (function () {
+    function Guantelete(pieza) {
+        this.pieza = pieza;
     }
-    ZombieA.prototype.ZombieA = function () { };
-    ZombieA.prototype.Armar = function () { return 1; };
-    return ZombieA;
+    Guantelete.prototype.endurecer = function () {
+        console.log(this.pieza + " equipada.");
+        return 1;
+    };
+    return Guantelete;
 })();
-var ZombieB = (function () {
-    function ZombieB() {
+//Decorator: Decorador general
+var Material = (function () {
+    function Material(pieza, armadura) {
+        this._pieza = pieza;
+        this.armadura = armadura;
     }
-    ZombieB.prototype.ZombieB = function () { };
-    ZombieB.prototype.Armar = function () { return 1; };
-    return ZombieB;
+    Object.defineProperty(Material.prototype, "pieza", {
+        get: function () {
+            return this._pieza;
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Material.prototype.endurecer = function () {
+        console.log(this._pieza + "equipada");
+        return 1 + this.armadura.endurecer();
+    };
+    return Material;
 })();
-var Robot = (function () {
-    function Robot() {
+//Decorator: Decorador concreto
+var Oro = (function (_super) {
+    __extends(Oro, _super);
+    function Oro(pieza, armadura) {
+        _super.call(this, pieza, armadura);
     }
-    Robot.prototype.Robot = function () { };
-    Robot.prototype.hp = function () { return 2; };
-    return Robot;
-})();
-//---------------------------------------DECORATOR--------------------------------------------------------------------//
-//------------decorator para representar aumento de vida o armadura dinamicamente-------------------------------------//
-// clase decorator que ñade resistencia
-var Armadura = (function () {
-    function Armadura() {
+    Oro.prototype.endurecer = function () {
+        console.log("pieza de oro en armadura");
+        return 1 + _super.prototype.endurecer.call(this);
+    };
+    return Oro;
+})(Material);
+var Titanio = (function (_super) {
+    __extends(Titanio, _super);
+    function Titanio(tipo, armadura) {
+        _super.call(this, tipo, armadura);
     }
-    return Armadura;
-})();
-var ArmaduraDebil = (function () {
-    function ArmaduraDebil(monster) {
-        this.monster = monster;
-    }
-    ArmaduraDebil.prototype.hp = function () { return this.monster.hp() + 1; };
-    return ArmaduraDebil;
-})();
-var ArmaduraFuerte = (function () {
-    function ArmaduraFuerte(monster) {
-        this.monster = monster;
-    }
-    ArmaduraFuerte.prototype.hp = function () { return this.monster.hp() + 2; };
-    return ArmaduraFuerte;
-})();
-//https://github.com/torokmark/design_patterns_in_typescript 
+    Titanio.prototype.endurecer = function () {
+        console.log("pieza de titanio en armadura");
+        return 2 + _super.prototype.endurecer.call(this);
+    };
+    return Titanio;
+})(Material);
 //# sourceMappingURL=main.js.map

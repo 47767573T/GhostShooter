@@ -188,10 +188,17 @@ class mainState extends Phaser.State {
     };
 
     private createPlayer() {
+
         this.game.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.game.player.anchor.setTo(0.5, 0.5);
-        //this.player.scale.setTo(2, 2);
-        this.game.player.health = this.game.LIVES;
+
+        //pieza de la armadura (DECORATOR)----------------------------------------------------------------------------//
+        var guantelete:Guantelete = new Guantelete ("brazal dragon");
+        var material:Material = new Oro ("guantelete de oro", guantelete);
+        //---------------------------------------------------------------------------------fin funcion DECORATOR------//
+
+        this.game.player.health = this.game.LIVES + material.endurecer();
+        console.log (this.game.player.health+ "COMPROBADO DECORATOR FUNCIONA");
         this.physics.enable(this.game.player, Phaser.Physics.ARCADE);
 
         this.game.player.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED
@@ -240,8 +247,6 @@ class mainState extends Phaser.State {
 
     private monsterTouchesPlayer(player:Phaser.Sprite, monster:Phaser.Sprite) {
         monster.kill();
-
-        monster = new ArmaduraDebil(monster);
 
         player.damage(1);
 
@@ -439,51 +444,75 @@ class ShooterGame extends Phaser.Game {
 window.onload = () => { new ShooterGame(); };
 
 
-interface Monster {
-    life;
-
-    Armar(): void;
-}
-
-class ZombieA implements Monster {
-    life = 1;
-
-    ZombieA(){  }
-    Armar(){ return 1; }
-}
-
-class ZombieB implements Monster{
-
-    ZombieB(){  }
-    Armar(){ return 1; }
-}
-
-class Robot implements Monster{
-
-    Robot() { }
-    hp() { return 2; }
-}
 
 //---------------------------------------DECORATOR--------------------------------------------------------------------//
-//------------decorator para representar aumento de vida o armadura dinamicamente-------------------------------------//
-
-// clase decorator que ñade resistencia
-abstract class Armadura { }
-
-class ArmaduraDebil implements Armadura {
-    monster:Monster;
-
-    public hp(): int { return this.monster.hp() + 1}
-
-    constructor( monster:Monster ) { this.monster = monster }
+//------------decorator para representar la defensa de armadura dinamica del jugador----------------------------------//
+//------------Que depende de la pieza del material--------------------------------------------------------------------//
+//Decorator: Componente general (ej: bebida)
+interface Armadura {
+    endurecer(): number;
 }
 
-class ArmaduraFuerte implements Armadura {
-    monster:Monster;
-    hp () { return this.monster.hp() + 2}
+//Decorator: Componente concreto (ej: cafe)
+class Guantelete implements Armadura {
+    private pieza:String;
 
-    constructor( monster:Monster ) { this.monster = monster }
+    constructor(pieza:String) {
+        this.pieza = pieza;
+    }
+
+    public endurecer(): number {
+        console.log(this.pieza+" equipada.")
+        return 1;
+    }
+}
+
+//Decorator: Decorador general
+class Material implements Armadura{
+    private armadura:Armadura;
+    private _pieza:String;
+
+    constructor(pieza:String, armadura:Armadura){
+        this._pieza = pieza;
+        this.armadura = armadura;
+    }
+
+    get pieza(): String{
+        return this._pieza;
+    }
+
+    public endurecer(): number {
+        console.log(this._pieza + "equipada");
+        return 1 + this.armadura.endurecer();
+    }
+
+}
+
+//Decorator: Decorador concreto
+class Oro extends Material {
+
+    constructor(pieza:String, armadura:Armadura){
+        super(pieza, armadura);
+    }
+
+    public endurecer(): number{
+        console.log("pieza de oro en armadura");
+        return 1 + super.endurecer();
+    }
+
+}
+
+class Titanio extends Material {
+
+    constructor(tipo:String, armadura:Armadura){
+        super(tipo, armadura);
+    }
+
+    public endurecer(): number{
+        console.log("pieza de titanio en armadura");
+        return 2 + super.endurecer();
+    }
+
 }
 
 
-//https://github.com/torokmark/design_patterns_in_typescript
