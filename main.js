@@ -1076,6 +1076,20 @@ var mainState = (function (_super) {
     };
     mainState.prototype.resetMonster = function (monster) {
         monster.rotation = this.physics.arcade.angleBetween(monster, this.game.player);
+        //monstruos enfadables cuando se chocan (STRATEGY)------------------------------------------------------------//
+        var velocidadActual = monster.body.velocity;
+        var velocidadNueva = velocidadActual;
+        //Control del contexto de enfado para determinar estrategia dinamicamente
+        if (this.game.monsterKilled > this.game.MONSTER_KILLED_MAX) {
+            var motivoEnfado = new MotivoEnfado(new MuyEnfadado());
+            var velocidadNueva = motivoEnfado.aplicarVelocidad(velocidadActual);
+        }
+        else {
+            var motivoEnfado = new MotivoEnfado(new PocoEnfadado());
+            var velocidadNueva = motivoEnfado.aplicarVelocidad(velocidadActual);
+        }
+        monster.body.velocity.setTo(velocidadNueva, velocidadNueva);
+        //---------------------------------------------------------------------------------fin patron STRATEGY--------//
     };
     mainState.prototype.createBullets = function () {
         this.game.bullets = this.add.group();
@@ -1084,7 +1098,7 @@ var mainState = (function (_super) {
         //tipos de bala (FACTORY)-------------------------------------------------------------------------------------//
         this.game.bullets.classType = Bullet;
         //factoria de balas
-        var bulletFactory = new BulletFactory(this.game, 0, 0);
+        var bulletFactory = new BulletFactory(this.game, this.game.world.centerX, this.game.world.centerY);
         for (var i = 0; i < this.game.BULLETS_CARTUCHO; i++) {
             var tipo = this.rnd.integerInRange(1, 3); //se inserta aleatoriamente el tipo de bala
             var bullet = bulletFactory.factory(tipo);
@@ -1297,16 +1311,21 @@ var ShooterGame = (function (_super) {
     __extends(ShooterGame, _super);
     function ShooterGame() {
         _super.call(this, 800, 480, Phaser.CANVAS, 'gameDiv');
+        //vars PLAYER
         this.PLAYER_ACCELERATION = 500;
-        this.PLAYER_MAX_SPEED = 400; // pixels/second
+        this.PLAYER_MAX_SPEED = 400;
         this.PLAYER_DRAG = 600;
+        this.LIVES = 3;
+        //vars MONSTERS
         this.MONSTER_SPEED = 100;
         this.MONSTER_HEALTH = 3;
-        this.FIRE_RATE = 200;
-        this.LIVES = 3;
-        this.TEXT_MARGIN = 50;
+        this.MONSTER_KILLED_MAX = 5; //Variable para controlar cuando se enfada un zombie (STRATEGY)
+        this.monsterKilled = 0; //Contador hasta llegar a un contexto de enfado zombie (STRATEGY)
         //vars BULLETS
         this.BULLETS_CARTUCHO = 20;
+        this.FIRE_RATE = 200;
+        //vars others
+        this.TEXT_MARGIN = 50;
         this.nextFire = 0;
         this.score = 0;
         this.state.add('main', mainState);
@@ -1315,8 +1334,42 @@ var ShooterGame = (function (_super) {
     return ShooterGame;
 })(Phaser.Game);
 window.onload = function () { new ShooterGame(); };
+//Strategy: Estategia Concreta
+var MuyEnfadado = (function () {
+    function MuyEnfadado() {
+        this.velocidadPlus = 200;
+    }
+    MuyEnfadado.prototype.velocidad = function (velocidadActual) {
+        if (velocidadActual == 800)
+            console.log("CUIDADO ZOMBIE RABIOSO");
+        return velocidadActual + this.velocidadPlus;
+    };
+    return MuyEnfadado;
+})();
+//Strategy: Estategia Concreta
+var PocoEnfadado = (function () {
+    function PocoEnfadado() {
+        this.velocidadPlus = 50;
+    }
+    PocoEnfadado.prototype.velocidad = function (velocidadActual) {
+        if (velocidadActual == 800)
+            console.log("CUIDADO ZOMBIE RABIOSO");
+        return velocidadActual + this.velocidadPlus;
+    };
+    return PocoEnfadado;
+})();
+//Strategy: Contexto para aplicar la estrategia
+var MotivoEnfado = (function () {
+    function MotivoEnfado(enfadable) {
+        this.enfadable = enfadable;
+    }
+    MotivoEnfado.prototype.aplicarVelocidad = function (velocidadActual) {
+        return this.enfadable.velocidad(velocidadActual);
+    };
+    return MotivoEnfado;
+})();
 //---------------------------------------FACTORY----------------------------------------------------------------------//
-//------------factory para crear varios tipos de balas-que se diferencian en el daño o ña velocidad-------------------//
+//------------factory para crear varios tipos de balas que se diferencian en el daño o ña velocidad-------------------//
 //--------------------------------------------------------------------------------------------------------------------//
 //Factory: Producto general
 var Bullet = (function (_super) {
@@ -1432,5 +1485,4 @@ var Titanio = (function (_super) {
     };
     return Titanio;
 })(Material);
-//https://github.com/torokmark/design_patterns_in_typescript/blob/master/factory_method/factoryMethod.ts 
 //# sourceMappingURL=main.js.map

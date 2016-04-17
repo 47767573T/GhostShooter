@@ -163,6 +163,27 @@ class mainState extends Phaser.State {
             monster,
             this.game.player
         );
+
+        //monstruos enfadables cuando se chocan (STRATEGY)------------------------------------------------------------//
+
+        var velocidadActual:number  = monster.body.velocity;
+        var velocidadNueva:number = velocidadActual;
+
+        //Control del contexto de enfado para determinar estrategia dinamicamente
+        if (this.game.monsterKilled > this.game.MONSTER_KILLED_MAX){
+
+            var motivoEnfado:MotivoEnfado = new MotivoEnfado(new MuyEnfadado());
+            var velocidadNueva = motivoEnfado.aplicarVelocidad(velocidadActual);
+
+        }else{
+
+            var motivoEnfado:MotivoEnfado = new MotivoEnfado(new PocoEnfadado());
+            var velocidadNueva = motivoEnfado.aplicarVelocidad(velocidadActual);
+
+        }
+
+        monster.body.velocity.setTo(velocidadNueva, velocidadNueva);
+        //---------------------------------------------------------------------------------fin patron STRATEGY--------//
     }
 
     private createBullets() {
@@ -174,11 +195,11 @@ class mainState extends Phaser.State {
         this.game.bullets.classType = Bullet;
 
         //factoria de balas
-        var bulletFactory:BulletFactory = new BulletFactory(this.game, 0, 0);
+        var bulletFactory:BulletFactory = new BulletFactory(this.game, this.game.world.centerX, this.game.world.centerY);
 
         for (var i = 0; i < this.game.BULLETS_CARTUCHO; i++) {
             var tipo:number = this.rnd.integerInRange(1,3);         //se inserta aleatoriamente el tipo de bala
-            var bullet:Bullet = bulletFactory.factory(tipo);
+            var bullet = bulletFactory.factory(tipo);
 
             console.log("añadida bala tipo: "+ tipo);
 
@@ -442,18 +463,25 @@ class ShooterGame extends Phaser.Game {
     stateText:Phaser.Text;
     gamepad:Gamepads.GamePad;
 
+    //vars PLAYER
     PLAYER_ACCELERATION = 500;
-    PLAYER_MAX_SPEED = 400; // pixels/second
+    PLAYER_MAX_SPEED = 400;
     PLAYER_DRAG = 600;
+    LIVES = 3;
+
+    //vars MONSTERS
     MONSTER_SPEED = 100;
     MONSTER_HEALTH = 3;
-    FIRE_RATE = 200;
-    LIVES = 3;
-    TEXT_MARGIN = 50;
+    MONSTER_KILLED_MAX = 5; //Variable para controlar cuando se enfada un zombie (STRATEGY)
+    monsterKilled = 0;      //Contador hasta llegar a un contexto de enfado zombie (STRATEGY)
+
 
     //vars BULLETS
     BULLETS_CARTUCHO = 20;
+    FIRE_RATE = 200;
 
+    //vars others
+    TEXT_MARGIN = 50;
     nextFire = 0;
     score = 0;
 
@@ -466,8 +494,52 @@ class ShooterGame extends Phaser.Game {
 
 window.onload = () => { new ShooterGame(); };
 
+//---------------------------------------STRATEGY---------------------------------------------------------------------//
+//------------strategy para crear varios tipos de conducta de los monstruos cuando chocan-----------------------------//
+//------------la conducta hace cambiar la velocidad del monster cuando esta enfadado----------------------------------//
+
+//Strategy: Estategia General
+interface Enfadable { velocidad(velocidadActual:number): number; }
+
+//Strategy: Estategia Concreta
+class MuyEnfadado implements Enfadable {
+    velocidadPlus:number = 200;
+
+    public velocidad(velocidadActual:number): number{
+
+        if (velocidadActual == 800) console.log ("CUIDADO ZOMBIE RABIOSO")
+
+        return velocidadActual + this.velocidadPlus;
+    }
+}
+
+//Strategy: Estategia Concreta
+class PocoEnfadado implements Enfadable {
+    velocidadPlus:number = 50;
+
+    public velocidad(velocidadActual:number): number{
+
+        if (velocidadActual == 800) console.log ("CUIDADO ZOMBIE RABIOSO")
+
+        return velocidadActual + this.velocidadPlus;
+    }
+}
+
+//Strategy: Contexto para aplicar la estrategia
+class MotivoEnfado {
+    private enfadable:Enfadable;
+
+    constructor (enfadable:Enfadable){ this.enfadable = enfadable; }
+
+    public aplicarVelocidad(velocidadActual:number): number {
+        return this.enfadable.velocidad(velocidadActual);
+    }
+
+}
+
+
 //---------------------------------------FACTORY----------------------------------------------------------------------//
-//------------factory para crear varios tipos de balas-que se diferencian en el daño o ña velocidad-------------------//
+//------------factory para crear varios tipos de balas que se diferencian en el daño o ña velocidad-------------------//
 //--------------------------------------------------------------------------------------------------------------------//
 
 //Factory: Producto general
@@ -625,6 +697,3 @@ class Titanio extends Material {
     }
 
 }
-
-
-//https://github.com/torokmark/design_patterns_in_typescript/blob/master/factory_method/factoryMethod.ts
