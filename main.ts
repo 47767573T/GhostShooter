@@ -169,7 +169,24 @@ class mainState extends Phaser.State {
         this.game.bullets = this.add.group();
         this.game.bullets.enableBody = true;
         this.game.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-        this.game.bullets.createMultiple(20, 'bullet');
+
+        //tipos de bala (FACTORY)-------------------------------------------------------------------------------------//
+        this.game.bullets.classType = Bullet;
+
+        //factoria de balas
+        var bulletFactory:BulletFactory = new BulletFactory(this.game, 0, 0);
+
+        for (var i = 0; i < this.game.BULLETS_CARTUCHO; i++) {
+            var tipo:number = this.rnd.integerInRange(1,3);         //se inserta aleatoriamente el tipo de bala
+            var bullet:Bullet = bulletFactory.factory(tipo);
+
+            console.log("añadida bala tipo: "+ tipo);
+
+            this.game.bullets.add(bullet);
+        }
+
+        console.log("Cargador cargado");
+        //---------------------------------------------------------------------------------fin patron FACTORY---------//
 
         this.game.bullets.setAll('anchor.x', 0.5);
         this.game.bullets.setAll('anchor.y', 0.5);
@@ -195,10 +212,10 @@ class mainState extends Phaser.State {
         //pieza de la armadura (DECORATOR)----------------------------------------------------------------------------//
         var guantelete:Guantelete = new Guantelete ("brazal dragon");
         var material:Material = new Oro ("guantelete de oro", guantelete);
-        //---------------------------------------------------------------------------------fin funcion DECORATOR------//
+        //---------------------------------------------------------------------------------fin patron DECORATOR-------//
 
         this.game.player.health = this.game.LIVES + material.endurecer();
-        console.log (this.game.player.health+ "COMPROBADO DECORATOR FUNCIONA");
+        console.log (this.game.player.health+ " COMPROBADO DECORATOR FUNCIONA");
         this.physics.enable(this.game.player, Phaser.Physics.ARCADE);
 
         this.game.player.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED
@@ -273,8 +290,11 @@ class mainState extends Phaser.State {
     }
 
     private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
+
         bullet.kill();
-        monster.damage(1);
+
+        //El daño cambia segun tipo de bala que impacta (FACTORY)-----------------------------------------------------//
+        monster.damage(bullet.components._BULLET_DAMAGE);
 
 
         this.explosion(bullet.x, bullet.y);
@@ -319,21 +339,21 @@ class mainState extends Phaser.State {
 
     private movePlayer() {
         var moveWithKeyboard = function () {
-            if (this.cursors.left.isDown ||
+            if (this.game.cursors.left.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.A)) {
-                this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
-            } else if (this.cursors.right.isDown ||
+                this.game.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
+            } else if (this.game.cursors.right.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.D)) {
-                this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
-            } else if (this.cursors.up.isDown ||
+                this.game.player.body.acceleration.x = this.PLAYER_ACCELERATION;
+            } else if (this.game.cursors.up.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.W)) {
-                this.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
-            } else if (this.cursors.down.isDown ||
+                this.game.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
+            } else if (this.game.cursors.down.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.S)) {
-                this.player.body.acceleration.y = this.PLAYER_ACCELERATION;
+                this.game.player.body.acceleration.y = this.PLAYER_ACCELERATION;
             } else {
-                this.player.body.acceleration.x = 0;
-                this.player.body.acceleration.y = 0;
+                this.game.player.body.acceleration.x = 0;
+                this.game.player.body.acceleration.y = 0;
             }
         };
 
@@ -373,7 +393,8 @@ class mainState extends Phaser.State {
 
                 bullet.angle = this.game.player.angle;
 
-                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.game.BULLET_SPEED);
+                //La velocidad cambia segun tipo de bala (FACTORY)----------------------------------------------------//
+                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, bullet._BULLET_SPEED);
 
                 bullet.body.velocity.setTo(velocity.x, velocity.y);
 
@@ -425,11 +446,13 @@ class ShooterGame extends Phaser.Game {
     PLAYER_MAX_SPEED = 400; // pixels/second
     PLAYER_DRAG = 600;
     MONSTER_SPEED = 100;
-    BULLET_SPEED = 800;
     MONSTER_HEALTH = 3;
     FIRE_RATE = 200;
     LIVES = 3;
     TEXT_MARGIN = 50;
+
+    //vars BULLETS
+    BULLETS_CARTUCHO = 20;
 
     nextFire = 0;
     score = 0;
@@ -443,11 +466,100 @@ class ShooterGame extends Phaser.Game {
 
 window.onload = () => { new ShooterGame(); };
 
+//---------------------------------------FACTORY----------------------------------------------------------------------//
+//------------factory para crear varios tipos de balas-que se diferencian en el daño o ña velocidad-------------------//
+//--------------------------------------------------------------------------------------------------------------------//
+
+//Factory: Producto general
+class Bullet extends Phaser.Sprite{
+
+    game:ShooterGame;
+    public _BULLET_DAMAGE:number;
+    public _BULLET_SPEED:number;
+
+    constructor(game:ShooterGame, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture, frame:string|number) {
+        super(game, x, y, key, frame);
+        this.game = game;
+    }
+
+    update():void{ super.update(); }
+}
+
+//Factory: Factoria de Productos
+class BulletFactory {
+
+    game:ShooterGame;
+    texture:string = 'bullet';
+    x:number;
+    y:number;
+
+    constructor(game:ShooterGame, x:number, y:number) {
+        this.game = game;
+        this.x = x;
+        this.y = y;
+    }
+
+    factory(key:number|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture):Bullet
+    {
+        switch (key){
+            case 1: return new BalaNormal(this.game, this.x, this.y, this.texture, 0);
+
+            case 2: return new BalaHueca(this.game, this.x, this.y, this.texture, 0);
+
+            case 3: return new BalaFina(this.game, this.x, this.y, this.texture, 0);
+
+            default: return null;
+        }
+    }
+}
+
+//Factory: Producto concreto
+class BalaNormal extends Bullet {
+
+    constructor(game:ShooterGame, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture
+        , frame:string|number) {
+
+        super(game, x, y, key, frame);
+        this._BULLET_DAMAGE = 2;
+        this._BULLET_SPEED = 800;
+    }
+
+    update():void { super.update();}
+}
+
+//Factory: Producto concreto
+class BalaHueca extends Bullet {
+
+    constructor(game:ShooterGame, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture
+        , frame:string|number) {
+
+        super(game, x, y, key, frame);
+        this._BULLET_DAMAGE = 3;
+        this._BULLET_SPEED = 200;
+    }
+
+    update():void {super.update();}
+}
+
+//Factory: Producto concreto
+class BalaFina extends Bullet {
+
+    constructor(game:ShooterGame, x:number, y:number, key:string|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture
+        , frame:string|number) {
+
+        super(game, x, y, key, frame);
+        this._BULLET_DAMAGE = 1;
+        this._BULLET_SPEED = 1600;
+    }
+
+    update():void {super.update();}
+}
 
 
 //---------------------------------------DECORATOR--------------------------------------------------------------------//
 //------------decorator para representar la defensa de armadura dinamica del jugador----------------------------------//
-//------------Que depende de la pieza del material--------------------------------------------------------------------//
+//------------que depende de la pieza del material--------------------------------------------------------------------//
+
 //Decorator: Componente general (ej: bebida)
 interface Armadura {
     endurecer(): number;
@@ -496,12 +608,11 @@ class Oro extends Material {
     }
 
     public endurecer(): number{
-        console.log("pieza de oro en armadura");
         return 1 + super.endurecer();
     }
-
 }
 
+//Decorator: Decorador concreto
 class Titanio extends Material {
 
     constructor(tipo:String, armadura:Armadura){
@@ -516,3 +627,4 @@ class Titanio extends Material {
 }
 
 
+//https://github.com/torokmark/design_patterns_in_typescript/blob/master/factory_method/factoryMethod.ts

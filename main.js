@@ -1081,7 +1081,18 @@ var mainState = (function (_super) {
         this.game.bullets = this.add.group();
         this.game.bullets.enableBody = true;
         this.game.bullets.physicsBodyType = Phaser.Physics.ARCADE;
-        this.game.bullets.createMultiple(20, 'bullet');
+        //tipos de bala (FACTORY)-------------------------------------------------------------------------------------//
+        this.game.bullets.classType = Bullet;
+        //factoria de balas
+        var bulletFactory = new BulletFactory(this.game, 0, 0);
+        for (var i = 0; i < this.game.BULLETS_CARTUCHO; i++) {
+            var tipo = this.rnd.integerInRange(1, 3); //se inserta aleatoriamente el tipo de bala
+            var bullet = bulletFactory.factory(tipo);
+            console.log("añadida bala tipo: " + tipo);
+            this.game.bullets.add(bullet);
+        }
+        console.log("Cargador cargado");
+        //---------------------------------------------------------------------------------fin patron FACTORY---------//
         this.game.bullets.setAll('anchor.x', 0.5);
         this.game.bullets.setAll('anchor.y', 0.5);
         this.game.bullets.setAll('scale.x', 0.5);
@@ -1104,9 +1115,9 @@ var mainState = (function (_super) {
         //pieza de la armadura (DECORATOR)----------------------------------------------------------------------------//
         var guantelete = new Guantelete("brazal dragon");
         var material = new Oro("guantelete de oro", guantelete);
-        //---------------------------------------------------------------------------------fin funcion DECORATOR------//
+        //---------------------------------------------------------------------------------fin patron DECORATOR-------//
         this.game.player.health = this.game.LIVES + material.endurecer();
-        console.log(this.game.player.health + "COMPROBADO DECORATOR FUNCIONA");
+        console.log(this.game.player.health + " COMPROBADO DECORATOR FUNCIONA");
         this.physics.enable(this.game.player, Phaser.Physics.ARCADE);
         this.game.player.body.maxVelocity.setTo(this.game.PLAYER_MAX_SPEED, this.game.PLAYER_MAX_SPEED); // x, y
         this.game.player.body.collideWorldBounds = true;
@@ -1164,7 +1175,8 @@ var mainState = (function (_super) {
     };
     mainState.prototype.bulletHitMonster = function (bullet, monster) {
         bullet.kill();
-        monster.damage(1);
+        //El daño cambia segun tipo de bala que impacta (FACTORY)-----------------------------------------------------//
+        monster.damage(bullet.components._BULLET_DAMAGE);
         this.explosion(bullet.x, bullet.y);
         if (monster.health > 0) {
             this.blink(monster);
@@ -1200,25 +1212,25 @@ var mainState = (function (_super) {
     ;
     mainState.prototype.movePlayer = function () {
         var moveWithKeyboard = function () {
-            if (this.cursors.left.isDown ||
+            if (this.game.cursors.left.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.A)) {
-                this.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
+                this.game.player.body.acceleration.x = -this.PLAYER_ACCELERATION;
             }
-            else if (this.cursors.right.isDown ||
+            else if (this.game.cursors.right.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.D)) {
-                this.player.body.acceleration.x = this.PLAYER_ACCELERATION;
+                this.game.player.body.acceleration.x = this.PLAYER_ACCELERATION;
             }
-            else if (this.cursors.up.isDown ||
+            else if (this.game.cursors.up.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.W)) {
-                this.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
+                this.game.player.body.acceleration.y = -this.PLAYER_ACCELERATION;
             }
-            else if (this.cursors.down.isDown ||
+            else if (this.game.cursors.down.isDown ||
                 this.input.keyboard.isDown(Phaser.Keyboard.S)) {
-                this.player.body.acceleration.y = this.PLAYER_ACCELERATION;
+                this.game.player.body.acceleration.y = this.PLAYER_ACCELERATION;
             }
             else {
-                this.player.body.acceleration.x = 0;
-                this.player.body.acceleration.y = 0;
+                this.game.player.body.acceleration.x = 0;
+                this.game.player.body.acceleration.y = 0;
             }
         };
         var moveWithVirtualJoystick = function () {
@@ -1257,7 +1269,8 @@ var mainState = (function (_super) {
                 bullet.reset(x, y);
                 this.explosion(x, y);
                 bullet.angle = this.game.player.angle;
-                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, this.game.BULLET_SPEED);
+                //La velocidad cambia segun tipo de bala (FACTORY)----------------------------------------------------//
+                var velocity = this.physics.arcade.velocityFromRotation(bullet.rotation, bullet._BULLET_SPEED);
                 bullet.body.velocity.setTo(velocity.x, velocity.y);
                 this.game.nextFire = this.time.now + this.game.FIRE_RATE;
             }
@@ -1288,11 +1301,12 @@ var ShooterGame = (function (_super) {
         this.PLAYER_MAX_SPEED = 400; // pixels/second
         this.PLAYER_DRAG = 600;
         this.MONSTER_SPEED = 100;
-        this.BULLET_SPEED = 800;
         this.MONSTER_HEALTH = 3;
         this.FIRE_RATE = 200;
         this.LIVES = 3;
         this.TEXT_MARGIN = 50;
+        //vars BULLETS
+        this.BULLETS_CARTUCHO = 20;
         this.nextFire = 0;
         this.score = 0;
         this.state.add('main', mainState);
@@ -1301,6 +1315,70 @@ var ShooterGame = (function (_super) {
     return ShooterGame;
 })(Phaser.Game);
 window.onload = function () { new ShooterGame(); };
+//---------------------------------------FACTORY----------------------------------------------------------------------//
+//------------factory para crear varios tipos de balas-que se diferencian en el daño o ña velocidad-------------------//
+//--------------------------------------------------------------------------------------------------------------------//
+//Factory: Producto general
+var Bullet = (function (_super) {
+    __extends(Bullet, _super);
+    function Bullet(game, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        this.game = game;
+    }
+    Bullet.prototype.update = function () { _super.prototype.update.call(this); };
+    return Bullet;
+})(Phaser.Sprite);
+//Factory: Factoria de Productos
+var BulletFactory = (function () {
+    function BulletFactory(game, x, y) {
+        this.texture = 'bullet';
+        this.game = game;
+        this.x = x;
+        this.y = y;
+    }
+    BulletFactory.prototype.factory = function (key) {
+        switch (key) {
+            case 1: return new BalaNormal(this.game, this.x, this.y, this.texture, 0);
+            case 2: return new BalaHueca(this.game, this.x, this.y, this.texture, 0);
+            case 3: return new BalaFina(this.game, this.x, this.y, this.texture, 0);
+            default: return null;
+        }
+    };
+    return BulletFactory;
+})();
+//Factory: Producto concreto
+var BalaNormal = (function (_super) {
+    __extends(BalaNormal, _super);
+    function BalaNormal(game, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        this._BULLET_DAMAGE = 2;
+        this._BULLET_SPEED = 800;
+    }
+    BalaNormal.prototype.update = function () { _super.prototype.update.call(this); };
+    return BalaNormal;
+})(Bullet);
+//Factory: Producto concreto
+var BalaHueca = (function (_super) {
+    __extends(BalaHueca, _super);
+    function BalaHueca(game, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        this._BULLET_DAMAGE = 3;
+        this._BULLET_SPEED = 200;
+    }
+    BalaHueca.prototype.update = function () { _super.prototype.update.call(this); };
+    return BalaHueca;
+})(Bullet);
+//Factory: Producto concreto
+var BalaFina = (function (_super) {
+    __extends(BalaFina, _super);
+    function BalaFina(game, x, y, key, frame) {
+        _super.call(this, game, x, y, key, frame);
+        this._BULLET_DAMAGE = 1;
+        this._BULLET_SPEED = 1600;
+    }
+    BalaFina.prototype.update = function () { _super.prototype.update.call(this); };
+    return BalaFina;
+})(Bullet);
 //Decorator: Componente concreto (ej: cafe)
 var Guantelete = (function () {
     function Guantelete(pieza) {
@@ -1338,11 +1416,11 @@ var Oro = (function (_super) {
         _super.call(this, pieza, armadura);
     }
     Oro.prototype.endurecer = function () {
-        console.log("pieza de oro en armadura");
         return 1 + _super.prototype.endurecer.call(this);
     };
     return Oro;
 })(Material);
+//Decorator: Decorador concreto
 var Titanio = (function (_super) {
     __extends(Titanio, _super);
     function Titanio(tipo, armadura) {
@@ -1354,4 +1432,5 @@ var Titanio = (function (_super) {
     };
     return Titanio;
 })(Material);
+//https://github.com/torokmark/design_patterns_in_typescript/blob/master/factory_method/factoryMethod.ts 
 //# sourceMappingURL=main.js.map
