@@ -1426,6 +1426,11 @@ var MuyEnfadado = (function () {
     function MuyEnfadado() {
         this.velocidadPlus = 200;
     }
+    /**
+     * Metodo que devuelve la velocidad aumentada cuando el zombie esta muy enfadado
+     * @param velocidadActual
+     * @returns {number}
+     */
     MuyEnfadado.prototype.velocidad = function (velocidadActual) {
         if (velocidadActual == 800)
             console.log("CUIDADO ZOMBIE RABIOSO");
@@ -1438,6 +1443,11 @@ var PocoEnfadado = (function () {
     function PocoEnfadado() {
         this.velocidadPlus = 50;
     }
+    /**
+     * Metodo que devuelve la velocidad aumentada cuando el zombie esta poco enfadado
+     * @param velocidadActual
+     * @returns {number}
+     */
     PocoEnfadado.prototype.velocidad = function (velocidadActual) {
         if (velocidadActual == 800)
             console.log("CUIDADO ZOMBIE RABIOSO");
@@ -1450,6 +1460,11 @@ var MotivoEnfado = (function () {
     function MotivoEnfado(enfadable) {
         this.enfadable = enfadable;
     }
+    /**
+     * metodo que devuelve la velocidad de la estrategia escogida
+     * @param velocidadActual
+     * @returns {number}
+     */
     MotivoEnfado.prototype.aplicarVelocidad = function (velocidadActual) {
         return this.enfadable.velocidad(velocidadActual);
     };
@@ -1476,7 +1491,11 @@ var BulletFactory = (function () {
         this.x = x;
         this.y = y;
     }
-    //factoria de 3 tipos de balas segun caracteristicas de cada bala
+    /**
+     * factoria de los tipos de balas creables según una condicion dada (key)
+     * @param key
+     * @returns {any}
+     */
     BulletFactory.prototype.factory = function (key) {
         switch (key) {
             case 1: return new BalaNormal(this.game, this.x, this.y, this.texture, 0);
@@ -1568,7 +1587,6 @@ var Titanio = (function (_super) {
         _super.call(this, tipo, armadura);
     }
     Titanio.prototype.endurecer = function () {
-        console.log("pieza de titanio en armadura");
         return 2 + _super.prototype.endurecer.call(this);
     };
     return Titanio;

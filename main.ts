@@ -593,6 +593,11 @@ interface Enfadable { velocidad(velocidadActual:number): number; }
 class MuyEnfadado implements Enfadable {
     velocidadPlus:number = 200;
 
+    /**
+     * Metodo que devuelve la velocidad aumentada cuando el zombie esta muy enfadado
+     * @param velocidadActual
+     * @returns {number}
+     */
     public velocidad(velocidadActual:number): number{
 
         if (velocidadActual == 800) console.log ("CUIDADO ZOMBIE RABIOSO")
@@ -605,6 +610,11 @@ class MuyEnfadado implements Enfadable {
 class PocoEnfadado implements Enfadable {
     velocidadPlus:number = 50;
 
+    /**
+     * Metodo que devuelve la velocidad aumentada cuando el zombie esta poco enfadado
+     * @param velocidadActual
+     * @returns {number}
+     */
     public velocidad(velocidadActual:number): number{
 
         if (velocidadActual == 800) console.log ("CUIDADO ZOMBIE RABIOSO")
@@ -619,6 +629,11 @@ class MotivoEnfado {
 
     constructor (enfadable:Enfadable){ this.enfadable = enfadable; }
 
+    /**
+     * metodo que devuelve la velocidad de la estrategia escogida
+     * @param velocidadActual
+     * @returns {number}
+     */
     public aplicarVelocidad(velocidadActual:number): number {
         return this.enfadable.velocidad(velocidadActual);
     }
@@ -659,9 +674,13 @@ class BulletFactory {
         this.y = y;
     }
 
-    //factoria de 3 tipos de balas segun caracteristicas de cada bala
-    factory(key:number|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture):Bullet
-    {
+    /**
+     * factoria de los tipos de balas creables según una condicion dada (key)
+     * @param key
+     * @returns {any}
+     */
+    factory(key:number|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture):Bullet {
+
         switch (key){
             case 1: return new BalaNormal(this.game, this.x, this.y, this.texture, 0);
 
@@ -723,12 +742,12 @@ class BalaFina extends Bullet {
 
 //Decorator: Componente general
 interface Armadura {
-    endurecer(): number;
+    endurecer(): number;        //añadir resistencia al personaje con armaduras
 }
 
 //Decorator: Componente concreto
 class Guantelete implements Armadura {
-    private pieza:String;
+    private pieza:String;   //Parte de la armadura
 
     constructor(pieza:String) {
         this.pieza = pieza;
@@ -743,7 +762,7 @@ class Guantelete implements Armadura {
 //Decorator: Decorador general
 class Material implements Armadura{
     private armadura:Armadura;
-    private _pieza:String;
+    private _pieza:String;  //Parte de la armadura
 
     constructor(pieza:String, armadura:Armadura){
         this._pieza = pieza;
@@ -780,7 +799,6 @@ class Titanio extends Material {
     }
 
     public endurecer(): number{
-        console.log("pieza de titanio en armadura");
         return 2 + super.endurecer();
     }
 }
