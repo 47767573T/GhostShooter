@@ -963,19 +963,19 @@ var mainState = (function (_super) {
     }
     mainState.prototype.preload = function () {
         _super.prototype.preload.call(this);
-        this.load.image('player', 'assets/survivor1_machine.png');
-        this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
-        this.load.image('zombie1', 'assets/zoimbie1_hold.png');
-        this.load.image('zombie2', 'assets/zombie2_hold.png');
-        this.load.image('robot', 'assets/robot1_hold.png');
-        this.load.image('explosion', 'assets/smokeWhite0.png');
-        this.load.image('explosion2', 'assets/smokeWhite1.png');
-        this.load.image('explosion3', 'assets/smokeWhite2.png');
+        this.load.image('player', 'assets/chars/survivor1_machine.png');
+        this.load.image('bullet', 'assets/chars/bulletBeigeSilver_outline.png');
+        this.load.image('zombie1', 'assets/chars/zoimbie1_hold.png');
+        this.load.image('zombie2', 'assets/chars/zombie2_hold.png');
+        this.load.image('robot', 'assets/chars/robot1_hold.png');
+        this.load.image('explosion', 'assets/effects/smokeWhite0.png');
+        this.load.image('explosion2', 'assets/effects/smokeWhite1.png');
+        this.load.image('explosion3', 'assets/effects/smokeWhite2.png');
         this.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
         this.load.image('tiles', 'assets/tilesheet_complete.png');
-        this.load.image('joystick_base', 'assets/transparentDark05.png');
-        this.load.image('joystick_segment', 'assets/transparentDark09.png');
-        this.load.image('joystick_knob', 'assets/transparentDark49.png');
+        this.load.image('joystick_base', 'assets/effects/transparentDark05.png');
+        this.load.image('joystick_segment', 'assets/effects/transparentDark09.png');
+        this.load.image('joystick_knob', 'assets/effects/transparentDark49.png');
         this.physics.startSystem(Phaser.Physics.ARCADE);
         if (this.game.device.desktop) {
             this.game.cursors = this.input.keyboard.createCursorKeys();
@@ -1005,6 +1005,9 @@ var mainState = (function (_super) {
             this.createVirtualJoystick();
         }
     };
+    /**
+     * Crea los textos de pantalla
+     */
     mainState.prototype.createTexts = function () {
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
@@ -1019,6 +1022,9 @@ var mainState = (function (_super) {
         this.game.stateText.fixedToCamera = true;
     };
     ;
+    /**
+     * Reproduce las explosiones al disparar el arma
+     */
     mainState.prototype.createExplosions = function () {
         var _this = this;
         this.game.explosions = this.add.group();
@@ -1033,6 +1039,9 @@ var mainState = (function (_super) {
         }, this);
     };
     ;
+    /**
+     * Crea los mueros del juego
+     */
     mainState.prototype.createWalls = function () {
         this.game.walls = this.game.tilemap.createLayer('walls');
         this.game.walls.x = this.world.centerX;
@@ -1041,17 +1050,26 @@ var mainState = (function (_super) {
         this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
     ;
+    /**
+     * Crea la imagen de fondo
+     */
     mainState.prototype.createBackground = function () {
         this.game.background = this.game.tilemap.createLayer('background');
         this.game.background.x = this.world.centerX;
         this.game.background.y = this.world.centerY;
     };
     ;
+    /**
+     * Carga el mapeado de casilla
+     */
     mainState.prototype.createTilemap = function () {
         this.game.tilemap = this.game.add.tilemap('tilemap');
         this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
     };
     ;
+    /**
+     * Crea los monstruos de la pantalla
+     */
     mainState.prototype.createMonsters = function () {
         var _this = this;
         this.game.monsters = this.add.group();
@@ -1071,9 +1089,17 @@ var mainState = (function (_super) {
         this.game.monsters.callAll('events.onOutOfBounds.add', 'events.onOutOfBounds', this.resetMonster, this);
     };
     ;
+    /**
+     * Genera aleatoriamente una direccion en el que los monstruos comienzan
+     * @param monster
+     */
     mainState.prototype.setRandomAngle = function (monster) {
         monster.angle = this.rnd.angle();
     };
+    /**
+     * Redirige el monstruo hacia el jugador tras cada chocue
+     * @param monster
+     */
     mainState.prototype.resetMonster = function (monster) {
         monster.rotation = this.physics.arcade.angleBetween(monster, this.game.player);
         //monstruos enfadables cuando se chocan (STRATEGY)------------------------------------------------------------//
@@ -1091,6 +1117,9 @@ var mainState = (function (_super) {
         monster.body.velocity.setTo(velocidadNueva, velocidadNueva);
         //---------------------------------------------------------------------------------fin patron STRATEGY--------//
     };
+    /**
+     * Crea las balas que dispara el jugador
+     */
     mainState.prototype.createBullets = function () {
         this.game.bullets = this.add.group();
         this.game.bullets.enableBody = true;
@@ -1115,14 +1144,23 @@ var mainState = (function (_super) {
         this.game.bullets.setAll('checkWorldBounds', true);
     };
     ;
+    /**
+     * Crea la posibilidad de jugar con joystick
+     */
     mainState.prototype.createVirtualJoystick = function () {
         this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
     };
     ;
+    /**
+     * Configura la camara del juego para que siga el player
+     */
     mainState.prototype.setupCamera = function () {
         this.camera.follow(this.game.player);
     };
     ;
+    /**
+     * Creación del personaje
+     */
     mainState.prototype.createPlayer = function () {
         this.game.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
         this.game.player.anchor.setTo(0.5, 0.5);
@@ -1157,6 +1195,9 @@ var mainState = (function (_super) {
         this.physics.arcade.collide(this.game.walls, this.game.monsters, this.resetMonster, null, this);
         this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
     };
+    /**
+     *  Define los controles del joystick
+     */
     mainState.prototype.rotateWithRightStick = function () {
         var speed = this.game.gamepad.stick2.speed;
         if (Math.abs(speed.x) + Math.abs(speed.y) > 20) {
@@ -1168,6 +1209,11 @@ var mainState = (function (_super) {
     mainState.prototype.fireWithRightStick = function () {
         //this.gamepad.stick2.
     };
+    /**
+     * metodo que describe la causistica cuando un monstruco toca al personaje
+     * @param player
+     * @param monster
+     */
     mainState.prototype.monsterTouchesPlayer = function (player, monster) {
         monster.kill();
         player.damage(1);
@@ -1180,13 +1226,26 @@ var mainState = (function (_super) {
             this.input.onTap.addOnce(this.restart, this);
         }
     };
+    /**
+     * Reinicia el juego
+     */
     mainState.prototype.restart = function () {
         this.game.state.restart();
     };
+    /**
+     * Metodo que define la causistica cuando una bala toca las paredes.
+     * @param bullet
+     * @param walls
+     */
     mainState.prototype.bulletHitWall = function (bullet, walls) {
         this.explosion(bullet.x, bullet.y);
         bullet.kill();
     };
+    /**
+     * Metodo que define la causistica cuando una bala toca un monstruo
+     * @param bullet
+     * @param monster
+     */
     mainState.prototype.bulletHitMonster = function (bullet, monster) {
         bullet.kill();
         //El daño cambia segun tipo de bala que impacta (FACTORY)-----------------------------------------------------//
@@ -1200,6 +1259,10 @@ var mainState = (function (_super) {
             this.game.scoreText.setText("Score: " + this.game.score);
         }
     };
+    /**
+     * Efecto parapadeo de monstruos o jugador cuando es dañado
+     * @param sprite
+     */
     mainState.prototype.blink = function (sprite) {
         var tween = this.add.tween(sprite)
             .to({ alpha: 0.5 }, 100, Phaser.Easing.Bounce.Out)
@@ -1207,23 +1270,39 @@ var mainState = (function (_super) {
         tween.repeat(3);
         tween.start();
     };
+    /**
+     * Ajuste de movimiento de todos los mosntruos del grupo de monstruos
+     */
     mainState.prototype.moveMonsters = function () {
         this.game.monsters.forEach(this.advanceStraightAhead, this);
     };
     ;
+    /**
+     * Definición de velocidad y direccion de monstruos hacia jugador
+     * @param monster
+     */
     mainState.prototype.advanceStraightAhead = function (monster) {
         this.physics.arcade.velocityFromAngle(monster.angle, this.game.MONSTER_SPEED, monster.body.velocity);
     };
+    /**
+     * definición de accion de botones de disparo del personaje
+     */
     mainState.prototype.fireWhenButtonClicked = function () {
         if (this.input.activePointer.isDown) {
             this.fire();
         }
     };
     ;
+    /**
+     * definición de rotar el personaje hacia el puntero del raton
+     */
     mainState.prototype.rotatePlayerToPointer = function () {
         this.game.player.rotation = this.physics.arcade.angleToPointer(this.game.player, this.input.activePointer);
     };
     ;
+    /**
+     * Definición de controles de movimiento del personaje con teclado y/o joystick
+     */
     mainState.prototype.movePlayer = function () {
         var moveWithKeyboard = function () {
             if (this.game.cursors.left.isDown ||
@@ -1273,6 +1352,9 @@ var mainState = (function (_super) {
         }
     };
     ;
+    /**
+     * Metodo de definición de la accion de disparar balas del personaje
+     */
     mainState.prototype.fire = function () {
         if (this.time.now > this.game.nextFire) {
             var bullet = this.game.bullets.getFirstDead();
@@ -1290,6 +1372,11 @@ var mainState = (function (_super) {
             }
         }
     };
+    /**
+     * Metodo que define las explosiones al disparar el arma
+     * @param x
+     * @param y
+     */
     mainState.prototype.explosion = function (x, y) {
         var explosion = this.game.explosions.getFirstDead();
         if (explosion) {
@@ -1369,7 +1456,7 @@ var MotivoEnfado = (function () {
     return MotivoEnfado;
 })();
 //---------------------------------------FACTORY----------------------------------------------------------------------//
-//------------factory para crear varios tipos de balas que se diferencian en el daño o ña velocidad-------------------//
+//------------factory para crear varios tipos de balas que se diferencian en el daño o la velocidad-------------------//
 //--------------------------------------------------------------------------------------------------------------------//
 //Factory: Producto general
 var Bullet = (function (_super) {
@@ -1389,6 +1476,7 @@ var BulletFactory = (function () {
         this.x = x;
         this.y = y;
     }
+    //factoria de 3 tipos de balas segun caracteristicas de cada bala
     BulletFactory.prototype.factory = function (key) {
         switch (key) {
             case 1: return new BalaNormal(this.game, this.x, this.y, this.texture, 0);
@@ -1432,7 +1520,7 @@ var BalaFina = (function (_super) {
     BalaFina.prototype.update = function () { _super.prototype.update.call(this); };
     return BalaFina;
 })(Bullet);
-//Decorator: Componente concreto (ej: cafe)
+//Decorator: Componente concreto
 var Guantelete = (function () {
     function Guantelete(pieza) {
         this.pieza = pieza;

@@ -9,22 +9,21 @@ class mainState extends Phaser.State {
     preload():void {
         super.preload();
 
+        this.load.image('player', 'assets/chars/survivor1_machine.png');
+        this.load.image('bullet', 'assets/chars/bulletBeigeSilver_outline.png');
+        this.load.image('zombie1', 'assets/chars/zoimbie1_hold.png');
+        this.load.image('zombie2', 'assets/chars/zombie2_hold.png');
+        this.load.image('robot', 'assets/chars/robot1_hold.png');
 
-        this.load.image('player', 'assets/survivor1_machine.png');
-        this.load.image('bullet', 'assets/bulletBeigeSilver_outline.png');
-        this.load.image('zombie1', 'assets/zoimbie1_hold.png');
-        this.load.image('zombie2', 'assets/zombie2_hold.png');
-        this.load.image('robot', 'assets/robot1_hold.png');
-
-        this.load.image('explosion', 'assets/smokeWhite0.png');
-        this.load.image('explosion2', 'assets/smokeWhite1.png');
-        this.load.image('explosion3', 'assets/smokeWhite2.png');
+        this.load.image('explosion', 'assets/effects/smokeWhite0.png');
+        this.load.image('explosion2', 'assets/effects/smokeWhite1.png');
+        this.load.image('explosion3', 'assets/effects/smokeWhite2.png');
         this.load.tilemap('tilemap', 'assets/tiles.json', null, Phaser.Tilemap.TILED_JSON);
         this.load.image('tiles', 'assets/tilesheet_complete.png');
 
-        this.load.image('joystick_base', 'assets/transparentDark05.png');
-        this.load.image('joystick_segment', 'assets/transparentDark09.png');
-        this.load.image('joystick_knob', 'assets/transparentDark49.png');
+        this.load.image('joystick_base', 'assets/effects/transparentDark05.png');
+        this.load.image('joystick_segment', 'assets/effects/transparentDark09.png');
+        this.load.image('joystick_knob', 'assets/effects/transparentDark49.png');
 
         this.physics.startSystem(Phaser.Physics.ARCADE);
 
@@ -59,6 +58,9 @@ class mainState extends Phaser.State {
         }
     }
 
+    /**
+     * Crea los textos de pantalla
+     */
     private createTexts() {
         var width = this.scale.bounds.width;
         var height = this.scale.bounds.height;
@@ -90,6 +92,9 @@ class mainState extends Phaser.State {
         this.game.stateText.fixedToCamera = true;
     };
 
+    /**
+     * Reproduce las explosiones al disparar el arma
+     */
     private createExplosions() {
         this.game.explosions = this.add.group();
         this.game.explosions.createMultiple(20, 'explosion');
@@ -105,6 +110,9 @@ class mainState extends Phaser.State {
         }, this);
     };
 
+    /**
+     * Crea los mueros del juego
+     */
     private createWalls() {
         this.game.walls = this.game.tilemap.createLayer('walls');
         this.game.walls.x = this.world.centerX;
@@ -115,18 +123,27 @@ class mainState extends Phaser.State {
         this.game.tilemap.setCollisionBetween(1, 195, true, 'walls');
     };
 
+    /**
+     * Crea la imagen de fondo
+     */
     private createBackground() {
         this.game.background = this.game.tilemap.createLayer('background');
         this.game.background.x = this.world.centerX;
         this.game.background.y = this.world.centerY;
     };
 
+    /**
+     * Carga el mapeado de casilla
+     */
     private createTilemap() {
         this.game.tilemap = this.game.add.tilemap('tilemap');
         this.game.tilemap.addTilesetImage('tilesheet_complete', 'tiles');
 
     };
 
+    /**
+     * Crea los monstruos de la pantalla
+     */
     private createMonsters() {
         this.game.monsters = this.add.group();
         this.game.monsters.enableBody = true;
@@ -154,10 +171,18 @@ class mainState extends Phaser.State {
             , this.resetMonster, this);
     };
 
+    /**
+     * Genera aleatoriamente una direccion en el que los monstruos comienzan
+     * @param monster
+     */
     private setRandomAngle(monster:Phaser.Sprite) {
         monster.angle = this.rnd.angle();
     }
 
+    /**
+     * Redirige el monstruo hacia el jugador tras cada chocue
+     * @param monster
+     */
     private resetMonster(monster:Phaser.Sprite) {
         monster.rotation = this.physics.arcade.angleBetween(
             monster,
@@ -186,6 +211,9 @@ class mainState extends Phaser.State {
         //---------------------------------------------------------------------------------fin patron STRATEGY--------//
     }
 
+    /**
+     * Crea las balas que dispara el jugador
+     */
     private createBullets() {
         this.game.bullets = this.add.group();
         this.game.bullets.enableBody = true;
@@ -217,14 +245,23 @@ class mainState extends Phaser.State {
         this.game.bullets.setAll('checkWorldBounds', true);
     };
 
+    /**
+     * Crea la posibilidad de jugar con joystick
+     */
     private createVirtualJoystick() {
         this.game.gamepad = new Gamepads.GamePad(this.game, Gamepads.GamepadType.DOUBLE_STICK);
     };
 
+    /**
+     * Configura la camara del juego para que siga el player
+     */
     private setupCamera() {
         this.camera.follow(this.game.player);
     };
 
+    /**
+     * Creación del personaje
+     */
     private createPlayer() {
 
         this.game.player = this.add.sprite(this.world.centerX, this.world.centerY, 'player');
@@ -268,6 +305,9 @@ class mainState extends Phaser.State {
         this.physics.arcade.collide(this.game.monsters, this.game.monsters, this.resetMonster, null, this);
     }
 
+    /**
+     *  Define los controles del joystick
+     */
     rotateWithRightStick() {
         var speed = this.game.gamepad.stick2.speed;
 
@@ -283,6 +323,11 @@ class mainState extends Phaser.State {
         //this.gamepad.stick2.
     }
 
+    /**
+     * metodo que describe la causistica cuando un monstruco toca al personaje
+     * @param player
+     * @param monster
+     */
     private monsterTouchesPlayer(player:Phaser.Sprite, monster:Phaser.Sprite) {
         monster.kill();
 
@@ -301,15 +346,28 @@ class mainState extends Phaser.State {
         }
     }
 
+    /**
+     * Reinicia el juego
+     */
     restart() {
         this.game.state.restart();
     }
 
+    /**
+     * Metodo que define la causistica cuando una bala toca las paredes.
+     * @param bullet
+     * @param walls
+     */
     private bulletHitWall(bullet:Phaser.Sprite, walls:Phaser.TilemapLayer) {
         this.explosion(bullet.x, bullet.y);
         bullet.kill();
     }
 
+    /**
+     * Metodo que define la causistica cuando una bala toca un monstruo
+     * @param bullet
+     * @param monster
+     */
     private bulletHitMonster(bullet:Phaser.Sprite, monster:Phaser.Sprite) {
 
         bullet.kill();
@@ -328,6 +386,10 @@ class mainState extends Phaser.State {
         }
     }
 
+    /**
+     * Efecto parapadeo de monstruos o jugador cuando es dañado
+     * @param sprite
+     */
     blink(sprite:Phaser.Sprite) {
         var tween = this.add.tween(sprite)
             .to({alpha: 0.5}, 100, Phaser.Easing.Bounce.Out)
@@ -337,20 +399,33 @@ class mainState extends Phaser.State {
         tween.start();
     }
 
+    /**
+     * Ajuste de movimiento de todos los mosntruos del grupo de monstruos
+     */
     private moveMonsters() {
         this.game.monsters.forEach(this.advanceStraightAhead, this)
     };
 
+    /**
+     * Definición de velocidad y direccion de monstruos hacia jugador
+     * @param monster
+     */
     private advanceStraightAhead(monster:Phaser.Sprite) {
         this.physics.arcade.velocityFromAngle(monster.angle, this.game.MONSTER_SPEED, monster.body.velocity);
     }
 
+    /**
+     * definición de accion de botones de disparo del personaje
+     */
     private fireWhenButtonClicked() {
         if (this.input.activePointer.isDown) {
             this.fire();
         }
     };
 
+    /**
+     * definición de rotar el personaje hacia el puntero del raton
+     */
     private rotatePlayerToPointer() {
         this.game.player.rotation = this.physics.arcade.angleToPointer(
             this.game.player,
@@ -358,6 +433,9 @@ class mainState extends Phaser.State {
         );
     };
 
+    /**
+     * Definición de controles de movimiento del personaje con teclado y/o joystick
+     */
     private movePlayer() {
         var moveWithKeyboard = function () {
             if (this.game.cursors.left.isDown ||
@@ -400,6 +478,9 @@ class mainState extends Phaser.State {
         }
     };
 
+    /**
+     * Metodo de definición de la accion de disparar balas del personaje
+     */
     fire():void {
         if (this.time.now > this.game.nextFire) {
             var bullet = this.game.bullets.getFirstDead();
@@ -424,6 +505,11 @@ class mainState extends Phaser.State {
         }
     }
 
+    /**
+     * Metodo que define las explosiones al disparar el arma
+     * @param x
+     * @param y
+     */
     explosion(x:number, y:number):void {
         var explosion:Phaser.Sprite = this.game.explosions.getFirstDead();
         if (explosion) {
@@ -494,6 +580,8 @@ class ShooterGame extends Phaser.Game {
 
 window.onload = () => { new ShooterGame(); };
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 //---------------------------------------STRATEGY---------------------------------------------------------------------//
 //------------strategy para crear varios tipos de conducta de los monstruos cuando chocan-----------------------------//
 //------------la conducta hace cambiar la velocidad del monster cuando esta enfadado----------------------------------//
@@ -539,7 +627,7 @@ class MotivoEnfado {
 
 
 //---------------------------------------FACTORY----------------------------------------------------------------------//
-//------------factory para crear varios tipos de balas que se diferencian en el daño o ña velocidad-------------------//
+//------------factory para crear varios tipos de balas que se diferencian en el daño o la velocidad-------------------//
 //--------------------------------------------------------------------------------------------------------------------//
 
 //Factory: Producto general
@@ -571,6 +659,7 @@ class BulletFactory {
         this.y = y;
     }
 
+    //factoria de 3 tipos de balas segun caracteristicas de cada bala
     factory(key:number|Phaser.RenderTexture|Phaser.BitmapData|PIXI.Texture):Bullet
     {
         switch (key){
@@ -632,12 +721,12 @@ class BalaFina extends Bullet {
 //------------decorator para representar la defensa de armadura dinamica del jugador----------------------------------//
 //------------que depende de la pieza del material--------------------------------------------------------------------//
 
-//Decorator: Componente general (ej: bebida)
+//Decorator: Componente general
 interface Armadura {
     endurecer(): number;
 }
 
-//Decorator: Componente concreto (ej: cafe)
+//Decorator: Componente concreto
 class Guantelete implements Armadura {
     private pieza:String;
 
@@ -669,7 +758,6 @@ class Material implements Armadura{
         console.log(this._pieza + "equipada");
         return 1 + this.armadura.endurecer();
     }
-
 }
 
 //Decorator: Decorador concreto
@@ -695,5 +783,4 @@ class Titanio extends Material {
         console.log("pieza de titanio en armadura");
         return 2 + super.endurecer();
     }
-
 }
